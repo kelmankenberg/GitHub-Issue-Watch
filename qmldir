@@ -1,1 +1,3 @@
 singleton Reports 1.0 Reports.qml
+PlainText 1.0 PlainText.qml
+SettingsView 1.0 SettingsView.qml
