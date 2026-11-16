@@ -80,9 +80,10 @@ to your reports.
   After the first successful check, new or updated open reports can trigger
   alerts; marking a report unread does not. Click an alert to open the plugin.
   Error indicators remain visible even if the unread badge is disabled.
-- **GitHub account:** see the last successfully checked CLI account and sign-in
-  instructions. Click Refresh to check the current account again.
-- **Help and feedback:** report bugs, request features, open the repository, and
+- **GitHub account:** see the last successfully checked CLI account. Expand
+  **Sign-in help** for instructions (shown automatically before an account is
+  loaded). Click Refresh to check the current account again.
+- **Plugin feedback:** report bugs, request features, open the repository, and
   see the installed plugin version.
 
 Existing read/unread history and paused refresh preferences are preserved when
@@ -90,8 +91,8 @@ upgrading.
 
 ## Report a bug or suggest a feature
 
-Use **Report a plugin bug** or **Request a plugin feature** in **Settings** to
-open the matching GitHub issue form. These actions submit feedback about
+Use **Report bug** or **Request feature** under **Plugin feedback** in
+**Settings** to open the matching GitHub issue form. These actions submit feedback about
 **OmaRepoReports itself**, not the repositories you are monitoring.
 
 You can also open a [bug report](https://github.com/kelmankenberg/OmaRepoReport/issues/new?template=bug_report.yml)
