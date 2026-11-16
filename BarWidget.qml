@@ -189,7 +189,8 @@ BarWidget {
         Layout.fillWidth: true
         Layout.preferredHeight: root.filtered.length === 0 ? Style.space(80)
           : Math.min(Style.space(340), Math.max(Style.space(70), popup.availableCardHeight
-            - Style.space(410) - accountNotice.implicitHeight - (accountSetup.visible ? accountSetup.implicitHeight + content.spacing : 0)))
+            - Style.space(410) - accountNotice.implicitHeight - feedbackActions.implicitHeight - content.spacing
+            - (accountSetup.visible ? accountSetup.implicitHeight + content.spacing : 0)))
         clip: true
         contentWidth: availableWidth
         ListView {
@@ -301,6 +302,23 @@ BarWidget {
           text: strings.t("reviewed")
           enabled: root.reportData.unread > 0 && !Reports.busy
           onClicked: Reports.run(["read", "all"])
+        }
+      }
+      RowLayout {
+        id: feedbackActions
+        Layout.fillWidth: true
+        spacing: Style.space(8)
+        Controls.Button {
+          objectName: "reportPluginBug"
+          Layout.fillWidth: true
+          text: strings.t("feedback.bug")
+          onClicked: root.browse("https://github.com/kelmankenberg/OmaRepoReport/issues/new?template=bug_report.yml")
+        }
+        Controls.Button {
+          objectName: "requestPluginFeature"
+          Layout.fillWidth: true
+          text: strings.t("feedback.feature")
+          onClicked: root.browse("https://github.com/kelmankenberg/OmaRepoReport/issues/new?template=feature_request.yml")
         }
       }
       Controls.CheckBox {

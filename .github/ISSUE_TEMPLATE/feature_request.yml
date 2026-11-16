@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest an improvement to OmaRepoReports.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea for OmaRepoReports.
+        This form is for the plugin itself, not the repositories it monitors.
+        Do not include access tokens, credentials, or private repository details.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the need or workflow that is not currently supported.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed feature
+      description: Explain what you would like the plugin to do and how it would help.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Mention any workarounds or alternative approaches you have tried.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add examples or mockups if helpful. Remove any private information first.

@@ -27,6 +27,8 @@
   "markUnread": "Mark unread",
   "status.read": "Read",
   "status.unread": "Unread",
+  "feedback.bug": "Report a plugin bug",
+  "feedback.feature": "Request a plugin feature",
   "automatic": "Check GitHub automatically every 5 minutes",
   "checked": "Last successful check: %1",
   "notChecked": "Not checked yet. Automatic checks use GitHub's API through gh."

@@ -66,6 +66,18 @@ is needed. No issue bodies or credentials are stored. Issue titles, URLs,
 timestamps, and local review state are saved privately under
 `${XDG_STATE_HOME:-~/.local/state}/omarchy-github-reports/state.json`.
 
+## Report a bug or suggest a feature
+
+Use **Report a plugin bug** or **Request a plugin feature** in the popup to open
+the matching GitHub issue form. These actions submit feedback about
+**OmaRepoReports itself**, not the repositories you are monitoring.
+
+You can also open a [bug report](https://github.com/kelmankenberg/OmaRepoReport/issues/new?template=bug_report.yml)
+or [feature request](https://github.com/kelmankenberg/OmaRepoReport/issues/new?template=feature_request.yml)
+directly. Sign into GitHub in your browser to submit the form; the plugin does
+not post issues automatically. Never include tokens, credentials, or private
+repository details in a public report.
+
 ## Local installation
 
 Copy this folder (not a symlink) to

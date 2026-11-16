@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a problem with OmaRepoReports.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve OmaRepoReports.
+        This form is for the plugin itself, not the repositories it monitors.
+        Do not include access tokens, credentials, or private repository details.
+  - type: input
+    id: plugin-version
+    attributes:
+      label: OmaRepoReports version
+      description: Check version in the plugin's manifest.json, or provide the commit if installed from source.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open OmaRepoReports.
+        2. ...
+        3. Observe the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include your Omarchy, Quickshell, and GitHub CLI versions if known. Do not paste credentials.
+      placeholder: |
+        Omarchy (omarchy version):
+        Quickshell (quickshell --version):
+        GitHub CLI (gh --version):
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Logs or screenshots
+      description: Add relevant errors or screenshots. Remove tokens, private issue titles, and private repository names first.
