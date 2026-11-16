@@ -9,7 +9,9 @@ collaborator repositories, Discussions, and off-GitHub feedback are not included
 
 *Preview uses demonstration reports.*
 
-Requires Omarchy's Quickshell plugin API, Python 3, GNU `timeout`, and GitHub CLI.
+Requires Omarchy Quattro's Quickshell plugin API, Python 3, GNU `timeout`
+(coreutils), and GitHub CLI (`gh`, the `github-cli` Arch package). Desktop alerts
+use Omarchy's notification service. The plugin has no pip or npm dependencies.
 
 ## Install
 
@@ -53,7 +55,8 @@ view when no account has been loaded or a refresh fails.
   immediately, and manual unread status survives refreshes and shell restarts.
 - The default refresh interval is five minutes. Use the gear icon to choose a
   different schedule or manual-only mode. Preferences survive shell restarts,
-  and polling is shared across monitors.
+  and polling is shared across monitors. Unloading the last widget stops the
+  polling timer, helper, and pending alerts.
 - All labels are accepted; common `bug` and `enhancement` / `feature request`
   labels categorize reports. Everything else remains visible under Other.
 - GitHub Search limits retrieval to 1,000 issues. The popup discloses truncation;
@@ -66,6 +69,30 @@ No separate access token, webhook, GitHub Watch subscription, or system service
 is needed. No issue bodies or credentials are stored. Issue titles, URLs,
 timestamps, and local review state are saved privately under
 `${XDG_STATE_HOME:-~/.local/state}/omarchy-github-reports/state.json`.
+
+## Permissions and privacy
+
+Like other Omarchy shell plugins, this runs unsandboxed as your desktop user.
+Only install plugins whose source and behavior you trust.
+
+- GitHub CLI handles authentication. The plugin does not read or store tokens
+  itself; it uses your existing account's access for read-only GitHub API calls
+  to identify the account and retrieve open-issue metadata.
+- Automatic checks contact `api.github.com` every five minutes by default.
+  Settings offers manual-only mode and intervals up to two hours. Refresh is
+  always user-accessible. No analytics, telemetry, or third-party API is used.
+- The cache includes private issue titles, repository names, URLs, timestamps,
+  preferences, and local read history. The state file is owner-readable/writable
+  only; the plugin does not encrypt them. Cached reports remain available while
+  offline or signed out. A successful account switch replaces the reports and
+  clears the previous account's read history.
+- Read/unread actions modify only that local cache. The plugin does not create,
+  edit, or close GitHub issues, or change GitHub notification state.
+- Opening reports, the repository, or feedback forms launches your browser.
+  Feedback is submitted only if you complete the GitHub form yourself.
+  Optional desktop alerts contain counts only, never issue titles.
+- Installation needs no elevated privileges, background system service, or
+  changes to configuration outside Omarchy's normal plugin enablement.
 
 ## Settings
 
@@ -101,6 +128,18 @@ directly. Sign into GitHub in your browser to submit the form; the plugin does
 not post issues automatically. Never include tokens, credentials, or private
 repository details in a public report.
 
+## Remove
+
+```sh
+omarchy plugin remove kel.github-reports
+```
+
+Confirm removal when prompted. This removes the plugin and stops its checks.
+Your GitHub account and repositories are not changed. The private cache and
+preferences are retained in
+`${XDG_STATE_HOME:-~/.local/state}/omarchy-github-reports/`; delete that directory
+separately if you no longer want the saved reports and read history.
+
 ## Local installation
 
 Copy this folder (not a symlink) to
@@ -119,3 +158,7 @@ If the shell still displays old controls after a plugin reload, run
 python3 -m unittest discover -s tests -v
 omarchy-shell kel.github-reports status
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE). Runtime dependencies retain their own licenses.

@@ -1,0 +1,84 @@
+import QtQuick
+import Quickshell
+import "@PLUGIN_URL@" as Plugin
+
+ShellRoot {
+  id: root
+  property var first: null
+  property var second: null
+  property int stage: 0
+  property int ticks: 0
+
+  function verify(condition, message) {
+    if (!condition) throw new Error(message)
+  }
+
+  Component { id: widget; Plugin.BarWidget {} }
+  Component.onCompleted: {
+    first = widget.createObject(root)
+    second = widget.createObject(root)
+    verify(first && second, "Both monitor widgets load")
+  }
+
+  Timer {
+    running: true
+    repeat: true
+    interval: 100
+    onTriggered: {
+      try {
+        root.verify(++root.ticks < 120, "Lifecycle test timed out")
+        if (Plugin.Reports.busy) return
+        switch (root.stage) {
+        case 0:
+          if (!Plugin.Reports.loaded) return
+          root.verify(Plugin.Reports.timer.running, "Automatic polling is scheduled")
+          root.first.destroy()
+          root.first = null
+          break
+        case 1:
+          root.verify(Plugin.Reports.started && Plugin.Reports.timer.running,
+            "The remaining monitor keeps the shared poller")
+          root.second.destroy()
+          root.second = null
+          break
+        case 2:
+          root.verify(!Plugin.Reports.started && !Plugin.Reports.timer.running,
+            "Removing the last widget must stop background polling")
+          Plugin.Reports.start()
+          Plugin.Reports.stop()
+          Plugin.Reports.start()
+          break
+        case 3:
+          if (!Plugin.Reports.loaded) return
+          root.verify(Plugin.Reports.started && Plugin.Reports.timer.running,
+            "Re-enabling during helper cancellation loads and schedules again")
+          Plugin.Reports.notifier.command = ["/usr/bin/sleep", "10"]
+          Plugin.Reports.notifier.running = true
+          Plugin.Reports.stop()
+          Plugin.Reports.start()
+          break
+        case 4:
+          if (!Plugin.Reports.loaded) return
+          root.verify(Plugin.Reports.notificationError === "",
+            "Cancelling an old alert must not report an error after re-enabling")
+          Plugin.Reports.stop()
+          break
+        case 5:
+          root.verify(!Plugin.Reports.started && !Plugin.Reports.timer.running
+            && !Plugin.Reports.helper.running && !Plugin.Reports.notifier.running,
+            "No helper, alert, or timer survives the last consumer")
+          root.verify(Plugin.Reports.pending.length === 0
+            && Plugin.Reports.pendingNotifications === 0, "Pending work is discarded")
+          root.verify(Plugin.Reports.data.owner === "example", "Cached account is preserved")
+          console.log("LIFECYCLE PASSED")
+          Qt.quit()
+          break
+        }
+        root.stage++
+      } catch (error) {
+        console.error(error.message)
+        Qt.exit(1)
+      }
+    }
+  }
+}

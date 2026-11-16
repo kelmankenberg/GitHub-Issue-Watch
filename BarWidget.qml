@@ -47,6 +47,7 @@ BarWidget {
   }
 
   Component.onCompleted: Reports.start()
+  Component.onDestruction: Reports.stop()
   implicitWidth: button.implicitWidth
   implicitHeight: barSize
 

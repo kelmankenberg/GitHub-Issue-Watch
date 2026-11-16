@@ -15,6 +15,9 @@ QtObject {
   property bool loaded: false
   property bool busy: false
   property bool started: false
+  property int clients: 0
+  property bool cancellingHelper: false
+  property bool cancellingNotifier: false
   property string action: ""
   property var pending: []
   readonly property string helperPath: decodeURIComponent(String(Qt.resolvedUrl("backend.py")).replace(/^file:\/\//, ""))
@@ -31,8 +34,8 @@ QtObject {
   }
 
   function notify(count) {
-    if (!data.desktopNotifications || count <= 0) return
-    if (notifier.running) {
+    if (!started || !data.desktopNotifications || count <= 0) return
+    if (notifier.running || cancellingNotifier) {
       pendingNotifications += count
       return
     }
@@ -45,12 +48,31 @@ QtObject {
   }
 
   function start() {
+    clients++
     if (started) return
     started = true
-    run(["load"])
+    if (!cancellingHelper) run(["load"])
+  }
+
+  function stop() {
+    clients = Math.max(0, clients - 1)
+    if (clients > 0) return
+    started = false
+    loaded = false
+    timer.stop()
+    startup.stop()
+    pending = []
+    pendingNotifications = 0
+    notificationError = ""
+    cancellingHelper = cancellingHelper || helper.running
+    if (cancellingHelper) helper.running = false
+    else busy = false
+    cancellingNotifier = cancellingNotifier || notifier.running
+    if (cancellingNotifier) notifier.running = false
   }
 
   function run(args) {
+    if (!started) return
     if (busy) {
       if (args[0] !== "poll") {
         if (pending.length < 20) pending = pending.concat([args])
@@ -72,6 +94,13 @@ QtObject {
     onExited: function(exitCode) {
       startup.stop()
       root.busy = false
+      var cancelled = root.cancellingHelper
+      root.cancellingHelper = false
+      if (!root.started) return
+      if (cancelled) {
+        root.run(["load"])
+        return
+      }
       try {
         if (output.text.length > 4000000) throw new Error("Report response exceeds the size limit.")
         var payload = JSON.parse(output.text)
@@ -101,7 +130,10 @@ QtObject {
 
   property Process notifier: Process {
     onExited: function(exitCode) {
-      if (exitCode !== 0 && root.data.desktopNotifications)
+      var cancelled = root.cancellingNotifier
+      root.cancellingNotifier = false
+      if (!root.started) return
+      if (!cancelled && exitCode !== 0 && root.data.desktopNotifications)
         root.notificationError = root.strings.t("notification.failed")
       var count = root.pendingNotifications
       root.pendingNotifications = 0
