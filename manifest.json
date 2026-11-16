@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "kel.github-reports",
+  "name": "OmaRepoReports",
+  "version": "0.1.0",
+  "description": "Open issues and unread report activity across your GitHub repositories.",
+  "kinds": ["bar-widget"],
+  "entryPoints": { "barWidget": "BarWidget.qml" },
+  "barWidget": {
+    "displayName": "OmaRepoReports",
+    "description": "Open bugs, feature requests, and unlabeled issues with a persistent activity badge.",
+    "category": "Info",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
