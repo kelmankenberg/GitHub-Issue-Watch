@@ -104,6 +104,17 @@ BarWidget {
 
       RowLayout {
         Layout.fillWidth: true
+        spacing: Style.space(8)
+        OpticalGlyph {
+          Layout.preferredWidth: Style.space(20)
+          Layout.preferredHeight: Style.space(20)
+          Layout.alignment: Qt.AlignVCenter
+          text: button.text
+          fontFamily: button.fontFamily
+          fontSize: Style.font.subtitle
+          paintedSize: Style.space(18)
+          color: Commons.Color.popups.text
+        }
         PlainText {
           Layout.fillWidth: true
           text: strings.t("title")
