@@ -148,7 +148,7 @@ Controls.ScrollView {
         text: strings.t("feedback.bug")
         Controls.ToolTip.visible: hovered
         Controls.ToolTip.text: strings.t("settings.feedbackHint")
-        onClicked: root.browseRequested("https://github.com/kelmankenberg/OmaRepoReport/issues/new?template=bug_report.yml")
+        onClicked: root.browseRequested("https://github.com/kelmankenberg/GitHub-Issue-Watch/issues/new?template=bug_report.yml")
       }
       Controls.Button {
         objectName: "requestPluginFeature"
@@ -156,13 +156,13 @@ Controls.ScrollView {
         text: strings.t("feedback.feature")
         Controls.ToolTip.visible: hovered
         Controls.ToolTip.text: strings.t("settings.feedbackHint")
-        onClicked: root.browseRequested("https://github.com/kelmankenberg/OmaRepoReport/issues/new?template=feature_request.yml")
+        onClicked: root.browseRequested("https://github.com/kelmankenberg/GitHub-Issue-Watch/issues/new?template=feature_request.yml")
       }
       Controls.Button {
         objectName: "pluginRepository"
         Layout.fillWidth: true
         text: strings.t("settings.repository")
-        onClicked: root.browseRequested("https://github.com/kelmankenberg/OmaRepoReport")
+        onClicked: root.browseRequested("https://github.com/kelmankenberg/GitHub-Issue-Watch")
       }
     }
   }

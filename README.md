@@ -1,11 +1,13 @@
-# OmaRepoReports
+# GitHub Issue Watch
+
+**GitHub Issues across your repositories**
 
 A theme-aware bar icon and popup for **all open issues in repositories owned by
 the GitHub account authenticated with `gh`**, including private repositories
 available to that account. Pull requests are excluded. Organization-owned and
 collaborator repositories, Discussions, and off-GitHub feedback are not included.
 
-![OmaRepoReports showing report controls and the Settings view](preview.png)
+![GitHub Issue Watch showing report controls and the Settings view](preview.png)
 
 *Preview uses demonstration reports.*
 
@@ -16,7 +18,7 @@ use Omarchy's notification service. The plugin has no pip or npm dependencies.
 ## Install
 
 ```sh
-omarchy plugin add https://github.com/kelmankenberg/OmaRepoReport.git --enable
+omarchy plugin add https://github.com/kelmankenberg/GitHub-Issue-Watch.git --enable
 ```
 
 The GitHub icon appears on the right side of the bar. Sign into GitHub CLI as
@@ -25,7 +27,7 @@ described below, then click the icon to view your reports.
 ## GitHub sign-in
 
 **You must be signed into GitHub CLI (`gh`). Being signed into GitHub in a web
-browser alone is not enough.** OmaRepoReports automatically uses the active
+browser alone is not enough.** GitHub Issue Watch automatically uses the active
 local GitHub CLI account; no username needs to be configured.
 
 If GitHub CLI is not signed in, run this in a terminal:
@@ -34,7 +36,7 @@ If GitHub CLI is not signed in, run this in a terminal:
 gh auth login --hostname github.com
 ```
 
-Then click **Refresh** in OmaRepoReports. If you already use `gh`, no additional
+Then click **Refresh** in GitHub Issue Watch. If you already use `gh`, no additional
 sign-in is needed. Use `gh auth status` to check your account. The popup displays
 the account it is using. Sign-in guidance appears in Settings and in the main
 view when no account has been loaded or a refresh fails.
@@ -114,16 +116,18 @@ to your reports.
   see the installed plugin version.
 
 Existing read/unread history and paused refresh preferences are preserved when
-upgrading.
+upgrading. The internal plugin ID (`kel.github-reports`) and cache location
+remain unchanged by the product rename, so existing installations keep their
+settings and read history.
 
 ## Report a bug or suggest a feature
 
 Use **Report bug** or **Request feature** under **Plugin feedback** in
 **Settings** to open the matching GitHub issue form. These actions submit feedback about
-**OmaRepoReports itself**, not the repositories you are monitoring.
+**GitHub Issue Watch itself**, not the repositories you are monitoring.
 
-You can also open a [bug report](https://github.com/kelmankenberg/OmaRepoReport/issues/new?template=bug_report.yml)
-or [feature request](https://github.com/kelmankenberg/OmaRepoReport/issues/new?template=feature_request.yml)
+You can also open a [bug report](https://github.com/kelmankenberg/GitHub-Issue-Watch/issues/new?template=bug_report.yml)
+or [feature request](https://github.com/kelmankenberg/GitHub-Issue-Watch/issues/new?template=feature_request.yml)
 directly. Sign into GitHub in your browser to submit the form; the plugin does
 not post issues automatically. Never include tokens, credentials, or private
 repository details in a public report.

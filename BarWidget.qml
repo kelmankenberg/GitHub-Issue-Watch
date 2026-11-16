@@ -128,6 +128,7 @@ BarWidget {
           color: Commons.Color.popups.text
         }
         PlainText {
+          objectName: "pluginTitle"
           Layout.fillWidth: true
           text: root.settingsOpen ? strings.t("settings.title") : strings.t("title")
           font.pixelSize: Style.font.subtitle
@@ -173,6 +174,14 @@ BarWidget {
         Layout.fillWidth: true
         visible: !root.settingsOpen
         spacing: content.spacing
+        PlainText {
+          objectName: "pluginSubtitle"
+          Layout.fillWidth: true
+          text: strings.t("subtitle")
+          wrapMode: Text.Wrap
+          font.pixelSize: Style.font.bodySmall
+          opacity: 0.7
+        }
         PlainText {
           Layout.fillWidth: true
           visible: root.reportData.owner !== ""

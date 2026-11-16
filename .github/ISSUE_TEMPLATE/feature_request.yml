@@ -1,12 +1,12 @@
 name: Feature request
-description: Suggest an improvement to OmaRepoReports.
+description: Suggest an improvement to GitHub Issue Watch.
 title: "[Feature]: "
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for sharing an idea for OmaRepoReports.
+        Thanks for sharing an idea for GitHub Issue Watch.
         This form is for the plugin itself, not the repositories it monitors.
         Do not include access tokens, credentials, or private repository details.
   - type: textarea

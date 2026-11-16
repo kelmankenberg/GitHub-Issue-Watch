@@ -41,7 +41,7 @@ QtObject {
     }
     notificationError = ""
     notifier.command = ["/usr/bin/timeout", "--kill-after=2s", "10s",
-      "omarchy-notification-send", "--app-name", "OmaRepoReports",
+      "omarchy-notification-send", "--app-name", "GitHub Issue Watch",
       strings.tn("notification.activity", count).arg(Commons.I18n.formatNumber(count)),
       strings.t("notification.body"), "--exec", "omarchy-shell", "kel.github-reports", "open"]
     notifier.running = true
