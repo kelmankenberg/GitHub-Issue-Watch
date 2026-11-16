@@ -5,7 +5,7 @@ the GitHub account authenticated with `gh`**, including private repositories
 available to that account. Pull requests are excluded. Organization-owned and
 collaborator repositories, Discussions, and off-GitHub feedback are not included.
 
-![OmaRepoReports showing issue summaries, unread activity, and per-report read/unread controls](preview.png)
+![OmaRepoReports showing report controls and the Settings view](preview.png)
 
 *Preview uses demonstration reports.*
 
@@ -34,7 +34,8 @@ gh auth login --hostname github.com
 
 Then click **Refresh** in OmaRepoReports. If you already use `gh`, no additional
 sign-in is needed. Use `gh auth status` to check your account. The popup displays
-the account it is using and explains the CLI sign-in requirement.
+the account it is using. Sign-in guidance appears in Settings and in the main
+view when no account has been loaded or a refresh fails.
 
 ## Use
 
@@ -50,9 +51,9 @@ the account it is using and explains the CLI sign-in requirement.
   status without opening the browser, plus an always-visible **Read** / **Unread**
   label. Unread reports also have a colored dot and bold title. The badge updates
   immediately, and manual unread status survives refreshes and shell restarts.
-- The first launch checks GitHub, then polls every five minutes. Disable
-  **Check GitHub automatically every 5 minutes** to use manual refresh only.
-  A paused preference survives shell restarts. Polling is shared across monitors.
+- The default refresh interval is five minutes. Use the gear icon to choose a
+  different schedule or manual-only mode. Preferences survive shell restarts,
+  and polling is shared across monitors.
 - All labels are accepted; common `bug` and `enhancement` / `feature request`
   labels categorize reports. Everything else remains visible under Other.
 - GitHub Search limits retrieval to 1,000 issues. The popup discloses truncation;
@@ -66,10 +67,31 @@ is needed. No issue bodies or credentials are stored. Issue titles, URLs,
 timestamps, and local review state are saved privately under
 `${XDG_STATE_HOME:-~/.local/state}/omarchy-github-reports/state.json`.
 
+## Settings
+
+Click the **gear icon** beside Refresh to open Settings; use **Back** to return
+to your reports.
+
+- **Refresh schedule:** manual-only, 5, 10, 15, or 30 minutes, or 1 or 2 hours.
+  Changes take effect immediately; the footer shows the selected schedule.
+  **Refresh** always checks immediately, even in manual-only mode.
+- **Notifications:** the unread badge is enabled by default. Optional desktop
+  alerts are disabled by default and report counts only, never issue titles.
+  After the first successful check, new or updated open reports can trigger
+  alerts; marking a report unread does not. Click an alert to open the plugin.
+  Error indicators remain visible even if the unread badge is disabled.
+- **GitHub account:** see the last successfully checked CLI account and sign-in
+  instructions. Click Refresh to check the current account again.
+- **Help and feedback:** report bugs, request features, open the repository, and
+  see the installed plugin version.
+
+Existing read/unread history and paused refresh preferences are preserved when
+upgrading.
+
 ## Report a bug or suggest a feature
 
-Use **Report a plugin bug** or **Request a plugin feature** in the popup to open
-the matching GitHub issue form. These actions submit feedback about
+Use **Report a plugin bug** or **Request a plugin feature** in **Settings** to
+open the matching GitHub issue form. These actions submit feedback about
 **OmaRepoReports itself**, not the repositories you are monitoring.
 
 You can also open a [bug report](https://github.com/kelmankenberg/OmaRepoReport/issues/new?template=bug_report.yml)

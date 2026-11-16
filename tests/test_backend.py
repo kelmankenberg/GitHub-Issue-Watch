@@ -1,5 +1,6 @@
 import copy
 import contextlib
+import datetime as dt
 import importlib.util
 import io
 import json
@@ -193,6 +194,83 @@ class ReportsTest(unittest.TestCase):
                     self.assertEqual(backend.main(), 0)
                     refresh.assert_called_once()
             self.assertFalse(backend.load_state(path / "state.json")["automatic"])
+
+    def test_existing_cache_keeps_review_history_and_paused_preference(self):
+        state = backend.empty_state()
+        state.update(owner="example", automatic=False, total=1,
+                     items=[backend.normalize_issue(node(), "example")])
+        state = backend.mark_reviewed(state, "all")
+        for key in ("refreshMinutes", "badgeEnabled", "desktopNotifications"):
+            state.pop(key)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "state.json"
+            backend.save_state(path, state)
+            migrated = backend.load_state(path)
+        self.assertFalse(migrated["automatic"])
+        self.assertEqual(migrated["refreshMinutes"], 5)
+        self.assertTrue(migrated["badgeEnabled"])
+        self.assertFalse(migrated["desktopNotifications"])
+        self.assertEqual(backend.view(migrated)["unread"], 0)
+
+    def test_two_hour_schedule_waits_until_due_and_manual_mode_stops_polling(self):
+        checked = dt.datetime(2026, 11, 16, 17, tzinfo=dt.timezone.utc)
+        state = backend.empty_state()
+        state.update(checked=checked.isoformat(), refreshMinutes=120)
+        self.assertFalse(backend.refresh_due(state, checked + dt.timedelta(minutes=119, seconds=59)))
+        self.assertTrue(backend.refresh_due(state, checked + dt.timedelta(hours=2)))
+        state["automatic"] = False
+        self.assertFalse(backend.refresh_due(state, checked + dt.timedelta(days=1)))
+
+    def test_schedule_and_notification_preferences_persist_without_affecting_reports(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "omarchy-github-reports"
+            path.mkdir()
+            state = backend.empty_state()
+            state.update(owner="example", total=1, items=[backend.normalize_issue(node(), "example")])
+            backend.save_state(path / "state.json", state)
+            for action, value in [("schedule", "120"), ("badge", "off"),
+                                  ("notifications", "on"), ("schedule", "0")]:
+                with patch.dict("os.environ", {"XDG_STATE_HOME": directory}), \
+                        patch("sys.argv", ["backend.py", action, value]), \
+                        patch.object(backend, "refresh", side_effect=AssertionError("Unexpected network access")), \
+                        contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(backend.main(), 0)
+            updated = backend.load_state(path / "state.json")
+            self.assertFalse(updated["automatic"])
+            self.assertEqual(updated["refreshMinutes"], 120)
+            self.assertFalse(updated["badgeEnabled"])
+            self.assertTrue(updated["desktopNotifications"])
+            self.assertEqual(updated["items"], state["items"])
+            self.assertEqual(backend.view(updated)["unread"], 1)
+
+    def test_invalid_schedules_and_preferences_do_not_overwrite_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "omarchy-github-reports"
+            path.mkdir()
+            backend.save_state(path / "state.json", backend.empty_state())
+            before = (path / "state.json").read_bytes()
+            for action, value in [("schedule", "121"), ("schedule", "1"), ("schedule", "-5"),
+                                  ("schedule", "5.0"), ("schedule", "bad"), ("notifications", "yes")]:
+                with self.subTest(action=action, value=value), \
+                        patch.dict("os.environ", {"XDG_STATE_HOME": directory}), \
+                        patch("sys.argv", ["backend.py", action, value]), \
+                        contextlib.redirect_stdout(io.StringIO()) as output:
+                    self.assertEqual(backend.main(), 1)
+                    self.assertIn("error", json.loads(output.getvalue()))
+                    self.assertEqual((path / "state.json").read_bytes(), before)
+
+    def test_notification_activity_counts_only_new_or_updated_reports_after_first_check(self):
+        state = backend.empty_state()
+        state.update(owner="example", checked="2026-11-16T17:00:00+00:00",
+                     items=[backend.normalize_issue(node(), "example")], total=1)
+        updated = copy.deepcopy(state)
+        updated["items"][0]["updated"] = "2026-11-16T18:00:00+00:00"
+        updated["items"].append(backend.normalize_issue(node("I_2", '<img src="https://invalid/tracker">'), "example"))
+        self.assertEqual(backend.new_activity(state, updated), 2)
+        self.assertEqual(backend.new_activity(state, backend.mark_reviewed(state, "all")), 0)
+        self.assertEqual(backend.new_activity(backend.empty_state(), updated), 0)
+        updated["owner"] = "different-account"
+        self.assertEqual(backend.new_activity(state, updated), 0)
 
     def test_untrusted_text_never_reaches_auto_text_or_shared_tooltip(self):
         root = Path(__file__).parents[1]

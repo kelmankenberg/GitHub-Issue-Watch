@@ -15,8 +15,9 @@ import tempfile
 from urllib.parse import urlencode
 
 LIMIT = 1000
-INTERVAL = 300
+REFRESH_MINUTES = (5, 10, 15, 30, 60, 120)
 MAX_STATE = 4_000_000
+PLUGIN_VERSION = json.loads(Path(__file__).with_name("manifest.json").read_text())["version"]
 OWNER = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\Z")
 REPOSITORY = re.compile(r"[A-Za-z0-9-]+/[A-Za-z0-9_.-]+\Z")
 ISSUE_URL = re.compile(r"https://github\.com/[A-Za-z0-9-]+/[A-Za-z0-9_.-]+/issues/[1-9][0-9]*\Z")
@@ -161,7 +162,8 @@ def fetch_reports(owner, request=gh_json):
 
 def empty_state():
     return {"version": 1, "owner": "", "items": [], "seen": {}, "total": 0,
-            "checked": "", "automatic": True}
+            "checked": "", "automatic": True, "refreshMinutes": 5,
+            "badgeEnabled": True, "desktopNotifications": False}
 
 
 def load_state(path):
@@ -180,6 +182,13 @@ def load_state(path):
                 or not isinstance(state.get("owner"), str)
                 or (state["owner"] and not OWNER.fullmatch(state["owner"]))):
             raise ValueError("Invalid cache structure")
+        defaults = empty_state()
+        for key in ("refreshMinutes", "badgeEnabled", "desktopNotifications"):
+            state.setdefault(key, defaults[key])
+        if (type(state["refreshMinutes"]) is not int or state["refreshMinutes"] not in REFRESH_MINUTES
+                or type(state["badgeEnabled"]) is not bool
+                or type(state["desktopNotifications"]) is not bool):
+            raise ValueError("Invalid preferences")
         if state.get("checked"):
             timestamp(state["checked"])
         for issue in state["items"]:
@@ -241,6 +250,21 @@ def mark_reviewed(state, identifier, reviewed=True):
     return updated
 
 
+def refresh_due(state, now):
+    if not state["automatic"]:
+        return False
+    return not state["checked"] or (
+        now - dt.datetime.fromisoformat(timestamp(state["checked"]))
+    ).total_seconds() >= state["refreshMinutes"] * 60
+
+
+def new_activity(previous, current):
+    if not previous["checked"] or previous["owner"].lower() != current["owner"].lower():
+        return 0
+    known = {row["id"]: row["updated"] for row in previous["items"]}
+    return sum(known.get(row["id"]) != row["updated"] for row in current["items"])
+
+
 def view(state):
     result = {key: value for key, value in state.items() if key != "seen"}
     result["items"] = [
@@ -249,6 +273,8 @@ def view(state):
     ]
     result["unread"] = sum(row["unread"] for row in result["items"])
     result["truncated"] = state["total"] > len(state["items"])
+    result["refreshOptions"] = [0, *REFRESH_MINUTES]
+    result["pluginVersion"] = PLUGIN_VERSION
     result["url"] = "https://github.com/issues?" + urlencode({
         "q": f'is:issue is:open user:{state["owner"]} sort:created-desc',
     }) if state["owner"] else "https://github.com/issues"
@@ -257,7 +283,9 @@ def view(state):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["load", "poll", "refresh", "read", "unread", "automatic"])
+    parser.add_argument("action", choices=[
+        "load", "poll", "refresh", "read", "unread", "automatic", "schedule", "badge", "notifications",
+    ])
     parser.add_argument("value", nargs="?")
     args = parser.parse_args()
     directory = Path(os.environ.get("XDG_STATE_HOME", str(Path.home() / ".local/state"))) / "omarchy-github-reports"
@@ -268,11 +296,11 @@ def main():
             path = directory / "state.json"
             state = load_state(path)
             now = dt.datetime.now(dt.timezone.utc)
-            due = not state["checked"] or (
-                now - dt.datetime.fromisoformat(state["checked"])
-            ).total_seconds() >= INTERVAL
-            if args.action == "refresh" or (args.action == "poll" and state["automatic"] and due):
-                state = refresh(state, now)
+            activity = 0
+            if args.action == "refresh" or (args.action == "poll" and refresh_due(state, now)):
+                previous = state
+                state = refresh(previous, now)
+                activity = new_activity(previous, state)
                 save_state(path, state)
             elif args.action in {"read", "unread"}:
                 if not args.value or (args.value != "all" and not any(
@@ -280,12 +308,22 @@ def main():
                     raise ReportError("The report is no longer in the cache. Refresh and try again.")
                 state = mark_reviewed(state, args.value, reviewed=args.action == "read")
                 save_state(path, state)
-            elif args.action == "automatic":
-                if args.value not in {"on", "off"}:
-                    raise ReportError("Automatic checks must be on or off.")
-                state["automatic"] = args.value == "on"
+            elif args.action == "schedule":
+                if args.value not in {str(value) for value in (0, *REFRESH_MINUTES)}:
+                    raise ReportError("Choose manual-only or a supported interval from 5 to 120 minutes.")
+                minutes = int(args.value)
+                state["automatic"] = minutes != 0
+                if minutes:
+                    state["refreshMinutes"] = minutes
                 save_state(path, state)
-            print(json.dumps(view(state)))
+            elif args.action in {"automatic", "badge", "notifications"}:
+                if args.value not in {"on", "off"}:
+                    raise ReportError("This setting must be on or off.")
+                key = {"automatic": "automatic", "badge": "badgeEnabled",
+                       "notifications": "desktopNotifications"}[args.action]
+                state[key] = args.value == "on"
+                save_state(path, state)
+            print(json.dumps({**view(state), "newActivity": activity}))
     except (ReportError, OSError) as error:
         print(json.dumps({"error": str(error)}))
         return 1

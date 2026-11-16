@@ -2,17 +2,47 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.Commons as Commons
 
 QtObject {
   id: root
-  property var data: ({ items: [], unread: 0, total: 0, automatic: true, checked: "", owner: "", truncated: false, url: "https://github.com/issues" })
+  property var data: ({ items: [], unread: 0, total: 0, automatic: true, refreshMinutes: 5,
+    refreshOptions: [], badgeEnabled: true, desktopNotifications: false, pluginVersion: "",
+    checked: "", owner: "", truncated: false, url: "https://github.com/issues" })
   property string error: ""
+  property string notificationError: ""
+  property int pendingNotifications: 0
   property bool loaded: false
   property bool busy: false
   property bool started: false
   property string action: ""
   property var pending: []
   readonly property string helperPath: decodeURIComponent(String(Qt.resolvedUrl("backend.py")).replace(/^file:\/\//, ""))
+  property Commons.Translations strings: Commons.Translations { directory: Qt.resolvedUrl("i18n") }
+
+  function scheduleNextCheck(failed) {
+    timer.stop()
+    if (!started || !loaded || !data.automatic) return
+    var interval = data.refreshMinutes * 60000
+    var remaining = !failed && data.checked ? interval - (Date.now() - Date.parse(data.checked)) : interval
+    if (!data.checked && !failed) remaining = 1000
+    timer.interval = Math.max(1000, Math.min(interval, remaining))
+    timer.start()
+  }
+
+  function notify(count) {
+    if (!data.desktopNotifications || count <= 0) return
+    if (notifier.running) {
+      pendingNotifications += count
+      return
+    }
+    notificationError = ""
+    notifier.command = ["/usr/bin/timeout", "--kill-after=2s", "10s",
+      "omarchy-notification-send", "--app-name", "OmaRepoReports",
+      strings.tn("notification.activity", count).arg(Commons.I18n.formatNumber(count)),
+      strings.t("notification.body"), "--exec", "omarchy-shell", "kel.github-reports", "open"]
+    notifier.running = true
+  }
 
   function start() {
     if (started) return
@@ -51,17 +81,31 @@ QtObject {
           root.data = payload
           root.loaded = true
           root.error = ""
+          if (!payload.desktopNotifications) {
+            root.notificationError = ""
+            root.pendingNotifications = 0
+          }
+          root.notify(Number(payload.newActivity || 0))
         }
       } catch (error) {
         root.error = "Could not read the report helper response."
       }
-      if (root.action === "load" && !root.error) {
-        Qt.callLater(function() { root.run(["poll"]) })
-      } else if (root.pending.length > 0) {
+      root.scheduleNextCheck(root.error !== "")
+      if (root.pending.length > 0) {
         var next = root.pending[0]
         root.pending = root.pending.slice(1)
         Qt.callLater(function() { root.run(next) })
       }
+    }
+  }
+
+  property Process notifier: Process {
+    onExited: function(exitCode) {
+      if (exitCode !== 0 && root.data.desktopNotifications)
+        root.notificationError = root.strings.t("notification.failed")
+      var count = root.pendingNotifications
+      root.pendingNotifications = 0
+      if (count > 0) root.notify(count)
     }
   }
 
@@ -71,13 +115,12 @@ QtObject {
       helper.running = false
       root.busy = false
       root.error = "Could not start the report helper. Check that python3 and timeout are installed."
+      root.scheduleNextCheck(true)
     }
   }
 
   property Timer timer: Timer {
-    interval: 300000
-    repeat: true
-    running: root.started && root.loaded && root.data.automatic
+    repeat: false
     onTriggered: root.run(["poll"])
   }
 }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "kel.github-reports",
   "name": "OmaRepoReports",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Open issues and unread report activity across your GitHub repositories.",
   "kinds": ["bar-widget"],
   "entryPoints": { "barWidget": "BarWidget.qml" },
